@@ -28,9 +28,16 @@
 !set TARGET = 64
 }
 
+
 !if TARGET = 128 {
 BASIC_START = $1c01
-} else {
+}
+
+!if TARGET = 65 {
+BASIC_START = $2001
+} 
+
+!if TARGET = 64 {
 BASIC_START = $0801
 }
 
@@ -140,7 +147,14 @@ entry
 !if TARGET = 128 {
     lda #14
     jsr PUTCHR
-} else {
+}
+
+!if TARGET = 65 {
+    lda #14
+    jsr PUTCHR
+}
+
+!if TARGET = 64 {
     lda	#%00010110 ; lowercase
     sta	VIC_ADDR
 }

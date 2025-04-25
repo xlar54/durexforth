@@ -10,12 +10,14 @@ SRC_DIR = forth_src
 SRCS_COMMON = $(wildcard $(SRC_DIR)/*.fs)
 SRCS_C64 = $(wildcard $(SRC_DIR)/c64/*.fs)
 SRCS_C128 = $(wildcard $(SRC_DIR)/c128/*.fs)
+SRCS_M65 = $(wildcard $(SRC_DIR)/m65/*.fs)
 
 PETSRCS_COMMON = $(subst forth_src/,build/,$(SRCS_COMMON:%.fs=%.pet))
 PETSRCS_C64 = $(subst forth_src/,build/,$(SRCS_C64:%.fs=%.pet))
 PETSRCS_C128 = $(subst forth_src/,build/,$(SRCS_C128:%.fs=%.pet))
+PETSRCS_M65 = $(subst forth_src/,build/,$(SRCS_M65:%.fs=%.pet))
 
-PETSRCS_ALL = $(PETSRCS_COMMON) $(PETSRCS_C64) $(PETSRCS_C128)
+PETSRCS_ALL = $(PETSRCS_COMMON) $(PETSRCS_C64) $(PETSRCS_C128) $(PETSRCS_M65)
 
 SRCNAME = $(patsubst %.pet,%,$(notdir $(1)))
 
@@ -24,12 +26,12 @@ SEPARATOR_NAME1 = '=-=-=-=-=-=-=-=,s'
 SEPARATOR_NAME2 = '=-------------=,s'
 SEPARATOR_NAME3 = '=-=---=-=---=-=,s'
 
-all: durexforth.d64 durexforth128.d64
+all: durexforth.d64 durexforth128.d64 durexforthm65.d64
 
 docs:
 	$(MAKE) -C docs
 
-deploy: deploy/durexforth-$(TAG_DEPLOY).pdf deploy/durexforth-$(TAG_DEPLOY).d64 deploy/durexforth-$(TAG_DEPLOY).crt deploy/durexforth128-$(TAG_DEPLOY).d64
+deploy: deploy/durexforth-$(TAG_DEPLOY).pdf deploy/durexforth-$(TAG_DEPLOY).d64 deploy/durexforth-$(TAG_DEPLOY).crt deploy/durexforth128-$(TAG_DEPLOY).d64 deploy/durexforthm65-$(TAG_DEPLOY).d64
 
 .PHONY: all clean docs deploy
 
@@ -47,6 +49,11 @@ deploy/durexforth128-$(TAG_DEPLOY).d64: durexforth128.d64
 	@mkdir -p deploy
 	cp $< $@
 	x128 -warp +confirmonexit $@
+
+deploy/durexforthm65-$(TAG_DEPLOY).d64: durexforthm65.d64
+	@mkdir -p deploy
+	cp $< $@
+	xmega65 $@
 
 # Build a cartridge image out of the precompiled Forth
 deploy/durexforth-$(TAG_DEPLOY).crt: deploy/durexforth-$(TAG_DEPLOY).d64 cart.asm
@@ -72,11 +79,23 @@ durexforth128.d64: durexforth128.prg $(EMPTY_FILE) $(PETSRCS_COMMON) $(PETSRCS_C
 	$(foreach f,$(PETSRCS_COMMON) $(PETSRCS_C128),-write $f $(call SRCNAME,$f)) \
 	-attach $@ -write $(EMPTY_FILE) $(SEPARATOR_NAME3)
 
+durexforthm65.d64: durexforthm65.prg $(EMPTY_FILE) $(PETSRCS_COMMON) $(PETSRCS_M65)
+	$(C1541) -format "durexforth,DF"  d64 $@ \
+	-attach $@ -write durexforthm65.prg durexforth \
+	-attach $@ -write $(EMPTY_FILE) $(SEPARATOR_NAME1) \
+	-attach $@ -write $(EMPTY_FILE) $(TAG_DEPLOY_DOT),s \
+	-attach $@ -write $(EMPTY_FILE) $(SEPARATOR_NAME2) \
+	$(foreach f,$(PETSRCS_COMMON) $(PETSRCS_M65),-write $f $(call SRCNAME,$f)) \
+	-attach $@ -write $(EMPTY_FILE) $(SEPARATOR_NAME3)
+
 durexforth.prg: *.asm
 	$(AS) -f cbm -DTARGET=64 -o $@ --vicelabels durexforth.lbl --report durexforth.lst durexforth.asm
 
 durexforth128.prg: *.asm
 	$(AS) -f cbm -DTARGET=128 -o $@ --vicelabels durexforth.lbl --report durexforth.lst durexforth.asm
+
+durexforthm65.prg: *.asm
+	$(AS) -f cbm -DTARGET=65 -o $@ --vicelabels durexforth.lbl --report durexforth.lst durexforth.asm
 
 $(PETSRCS_ALL) : build/%.pet : $(SRC_DIR)/%.fs | build/header ext/petcom
 	@mkdir -p $(dir $@)

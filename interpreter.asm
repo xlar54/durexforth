@@ -38,7 +38,13 @@ quit_reset
 !if TARGET = 128 {
     lda #0
     sta SCREEN_MODE
-} else {
+} 
+
+!if TARGET = 65 {
+
+} 
+
+!if TARGET = 64 {
     lda #$9b
     sta VIC_CR1
     lda #$17
