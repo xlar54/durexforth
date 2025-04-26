@@ -66,11 +66,22 @@ TYPE ; ( caddr u -- )
 !if TARGET = 128 {
     lda MACRO_NDX ; Number of characters pending from function-key macro
     bne +
-}
 -   lda NDX
     beq -
+}
+
+!if TARGET = 64 {
+-   lda NDX
+    beq -   
+}
+
 +   stx W
-    jsr KEYIN ; Get character from keyboard buffer
+-   jsr KEYIN ; Get character from keyboard buffer
+
+!if TARGET = 65 {
+    beq -
+}
+
     ldx W
     ldy #0
     jmp pushya

@@ -114,7 +114,18 @@ INIT_STATUS = $0a04
 CASSETTEBUF = $0b00
 KEYIN = $c006
 MMUCR = $ff00
-} else {
+} 
+
+!if TARGET = 65 {
+    NDX = $c6
+    QTSW = $d4
+    COLOR = $286
+    CASSETTEBUF = $033c
+
+    KEYIN = $ffe4
+}
+
+!if TARGET = 64 {
 NDX = $c6
 QTSW = $d4
 COLOR = $286
